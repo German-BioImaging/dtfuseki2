@@ -6,7 +6,9 @@ services:
     build: .
     environment:
        - "ADMIN_PASSWORD=admin"
-       - "QUERY_TIMEOUT=500000"
+       - "QUERY_TIMEOUT=5000000"
+       - "ENABLE_UPDATE=true"
+       - "ENABLE_UPLOAD=true"
        - "JVM_ARGS=-Xmx32g"
        - "TDB=2"
        # "FUSEKI_DATASET_1=hpa"
@@ -16,6 +18,8 @@ services:
       # Overwrite FUSEKI_HOME/shiro.ini for use by entrypoint
       - "./shiro.ini:/jena-fuseki/shiro.ini"
       - "./data:/fuseki-base/databases"
+      - "./web.xml:/jena-fuseki/webapp/WEB-INF/web.xml"
+      - "./static/d3sparql:/jena-fuseki/webapp/static/d3sparql"
 
   apacheds:
     hostname: apacheds
@@ -37,6 +41,21 @@ services:
     restart: "no"
     environment:
        - "LDAP_HOST=apacheds"
-       - "QUERY_TIMEOUT=500000"
     depends_on:
       - apacheds
+
+  yasgui:
+    image: erikap/yasgui
+    environment:
+     DEFAULT_SPARQL_ENDPOINT: "http://idr.semscape.org:3030/ds/sparql"
+     ENABLE_ENDPOINT_SELECTOR: "true"
+    ports:
+        - "8000:8000"
+
+  nginx:
+    image: nginx
+    ports:
+        - "80:80"
+    volumes:
+      - "./static/d3sparql:/app/static"
+      - "./nginx.conf:/etc/nginx/nginx.conf"
