@@ -1,0 +1,21 @@
+#!/bin/bash
+
+set -e
+set -x
+
+URI=http://idr.semscape.org:3030/
+FUSEKI_HOME=/jena-fuseki
+FUSEKI_BASE=/fuseki-base
+ASSEMBLER=$FUSEKI_BASE/configuration/assembler.ttl
+
+java -cp "$FUSEKI_HOME/fuseki-server.jar:/javalibs/*" \
+	tdb2.tdbloader --desc=$ASSEMBLER \
+	--graph=$URI/hpa $FUSEKI_BASE/databases/hpa_omero.ttl.gz \
+
+java -cp "$FUSEKI_HOME/fuseki-server.jar:/javalibs/*" \
+	jena.textindexer --desc=$ASSEMBLER \
+
+java -cp "$FUSEKI_HOME/fuseki-server.jar:/javalibs/*" \
+	tdb.tdbstats --desc=$ASSEMBLER \
+	--graph urn:x-arq:UnionGraph > /tmp/stats.opt \
+	&& mv /tmp/stats.opt /fuseki-base/databases/tdb/
